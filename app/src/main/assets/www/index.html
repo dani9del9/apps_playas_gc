@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b1a">
+<title>Playas GC</title>
+<style>
+:root{
+  --bg:#070b1a; --bg2:#0d1430; --card:#111a3a; --card2:#16214a; --line:#243063;
+  --txt:#eef2ff; --mut:#93a0cf; --dim:#5f6aa0;
+  --cyan:#22d3ee; --pink:#f472b6; --lime:#a3e635; --amber:#fbbf24; --red:#fb7185; --violet:#a78bfa; --blue:#60a5fa; --orange:#fb923c;
+  --ok:#34d399; --warn:#fbbf24; --bad:#fb7185;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;background:
+  radial-gradient(900px 500px at 110% -10%, rgba(244,114,182,.18), transparent 60%),
+  radial-gradient(800px 500px at -20% 10%, rgba(34,211,238,.16), transparent 60%),
+  radial-gradient(700px 600px at 50% 120%, rgba(167,139,250,.15), transparent 60%), var(--bg);
+  background-attachment:fixed}
+header{position:sticky;top:0;z-index:5;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;
+  background:linear-gradient(180deg, rgba(7,11,26,.97) 70%, rgba(7,11,26,.0));backdrop-filter:blur(8px)}
+.top{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:22px;
+  background:conic-gradient(from 200deg, var(--cyan), var(--violet), var(--pink), var(--amber), var(--cyan));box-shadow:0 6px 24px rgba(34,211,238,.3)}
+h1{margin:0;font-size:20px;letter-spacing:.2px}
+h1 span{background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:12px;color:var(--mut);margin-top:2px}
+.refresh{margin-left:auto;border:0;width:42px;height:42px;border-radius:14px;background:var(--card2);color:var(--cyan);font-size:20px}
+.refresh.spin span{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.search{margin-top:12px;display:flex;gap:8px}
+.search input{flex:1;background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:14px;padding:11px 14px;font-size:15px;outline:none}
+.search input:focus{border-color:var(--cyan)}
+.chips{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600}
+.chip.on{color:#0a0f22;border-color:transparent;background:linear-gradient(90deg,var(--cyan),var(--violet))}
+.chip.sort.on{background:linear-gradient(90deg,var(--pink),var(--amber))}
+main{padding:4px 14px calc(24px + env(safe-area-inset-bottom))}
+.status{color:var(--mut);font-size:12px;margin:4px 4px 10px;display:flex;gap:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px 0 8px}
+.card{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);
+  border-radius:20px;padding:14px 14px 12px 18px;margin-bottom:12px;animation:pop .35s ease both}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--st,var(--dim))}
+.card::after{content:"";position:absolute;right:-60px;top:-60px;width:160px;height:160px;border-radius:50%;background:var(--st,var(--dim));opacity:.10;filter:blur(10px)}
+.ch{display:flex;align-items:flex-start;gap:10px}
+.name{font-weight:750;font-size:17px}
+.muni{font-size:12px;color:var(--mut);margin-top:2px}
+.badge{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.4px;padding:5px 9px;border-radius:10px;color:#0a0f22;background:var(--st);white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.m{background:rgba(255,255,255,.035);border-radius:14px;padding:8px 6px;text-align:center}
+.m .ic{font-size:15px}
+.m .v{font-size:16px;font-weight:800;margin-top:2px}
+.m .l{font-size:10.5px;color:var(--mut);margin-top:1px}
+.wind .v{color:var(--cyan)} .wave .v{color:var(--violet)} .water .v{color:var(--pink)} .tide .v{color:var(--lime)}
+.arrow{display:inline-block;transition:transform .3s}
+.foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tag{font-size:11px;padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.05);color:var(--mut)}
+.tag b{color:var(--txt);font-weight:700}
+.tag.src{color:var(--amber);background:rgba(251,191,36,.08)}
+.tag.src2{color:var(--cyan);background:rgba(34,211,238,.08)}
+.empty{text-align:center;color:var(--mut);padding:40px 10px}
+.loading{display:grid;gap:12px}
+.sk{height:132px;border-radius:20px;background:linear-gradient(90deg,var(--card) 0%,var(--card2) 50%,var(--card) 100%);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+/* detalle */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(3,5,14,.7);backdrop-filter:blur(4px);display:none}
+.sheet.open{display:block}
+.panel{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:linear-gradient(180deg,#121b40,#0b1129);
+  border-radius:26px 26px 0 0;border-top:1px solid var(--line);padding:10px 16px calc(24px + env(safe-area-inset-bottom));animation:up .28s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.grab{width:44px;height:5px;border-radius:5px;background:var(--line);margin:4px auto 10px}
+.panel h2{margin:4px 0 0;font-size:22px}
+.close{position:absolute;right:14px;top:14px;border:0;background:var(--card2);color:var(--txt);width:36px;height:36px;border-radius:12px;font-size:18px}
+.sec{margin-top:18px}
+.sec h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin:0 0 8px}
+.box{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:12px}
+.tides{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.td{border-radius:12px;padding:8px;text-align:center;background:rgba(255,255,255,.04)}
+.td .k{font-size:11px;color:var(--mut)} .td .t{font-size:17px;font-weight:800}
+.td.hi .t{color:var(--cyan)} .td.lo .t{color:var(--orange)}
+table.ae{width:100%;border-collapse:collapse;font-size:13px}
+table.ae th,table.ae td{padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.06);text-align:center}
+table.ae th{color:var(--mut);font-weight:600;font-size:11.5px}
+table.ae td:first-child,table.ae th:first-child{text-align:left;color:var(--mut)}
+.lvl0{color:var(--ok)} .lvl1{color:var(--warn)} .lvl2{color:var(--bad)}
+.bars{display:flex;align-items:flex-end;gap:4px;height:90px}
+.bar{flex:1;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--pink),var(--violet));position:relative;min-height:3px}
+.bar span{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--dim)}
+.bar b{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--mut);font-weight:600}
+.note{font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:16px}
+a{color:var(--cyan)}
+/* web en pantalla ancha: columna tipo móvil centrada */
+.app{max-width:480px;margin:0 auto;min-height:100vh;position:relative}
+.panel{max-width:480px;margin:0 auto}
+@media (min-width:560px){
+  .app{border-left:1px solid var(--line);border-right:1px solid var(--line);background:rgba(7,11,26,.55);box-shadow:0 0 80px rgba(34,211,238,.08)}
+  .panel{border-left:1px solid var(--line);border-right:1px solid var(--line)}
+  header{padding-top:18px}
+  .card{cursor:pointer;transition:transform .15s, border-color .15s}
+  .card:hover{transform:translateY(-2px);border-color:#34428a}
+  .chip,.refresh,.close{cursor:pointer}
+  .chips{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="top">
+    <div class="logo">🌊</div>
+    <div>
+      <h1>Playas <span>Gran Canaria</span></h1>
+      <div class="sub" id="sub">Viento · oleaje · mareas · agua</div>
+    </div>
+    <button class="refresh" id="refresh" aria-label="Actualizar"><span>⟳</span></button>
+  </div>
+  <div class="search"><input id="q" placeholder="Buscar playa o municipio…" autocomplete="off"></div>
+  <div class="chips" id="zones"></div>
+  <div class="chips" id="sorts"></div>
+</header>
+<main>
+  <div class="status" id="status"></div>
+  <div id="list" class="loading"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+</main>
+</div>
+<div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+
+<script>
+// ───────────────────────── Playas ─────────────────────────
+// aemet: código de playa en AEMET (predicción oficial + mareas IHM). Las demás solo con Open-Meteo.
+const BEACHES = [
+  {n:"Las Canteras",m:"Las Palmas de GC",z:"Norte",lat:28.1403,lon:-15.4358,aemet:"3501601"},
+  {n:"El Confital",m:"Las Palmas de GC",z:"Norte",lat:28.1555,lon:-15.4370},
+  {n:"Las Alcaravaneras",m:"Las Palmas de GC",z:"Este",lat:28.1310,lon:-15.4230},
+  {n:"La Laja",m:"Las Palmas de GC",z:"Este",lat:28.0670,lon:-15.4170},
+  {n:"El Puertillo",m:"Arucas",z:"Norte",lat:28.1500,lon:-15.5356,aemet:"3500601"},
+  {n:"Charco de San Lorenzo",m:"Moya",z:"Norte",lat:28.1436,lon:-15.5758,aemet:"3501301"},
+  {n:"San Felipe",m:"Santa María de Guía",z:"Norte",lat:28.1458,lon:-15.5922,aemet:"3502301"},
+  {n:"El Agujero",m:"Gáldar",z:"Norte",lat:28.1520,lon:-15.6600},
+  {n:"Sardina",m:"Gáldar",z:"Norte",lat:28.1519,lon:-15.6961,aemet:"3500901"},
+  {n:"Las Nieves",m:"Agaete",z:"Oeste",lat:28.1008,lon:-15.7103,aemet:"3500101"},
+  {n:"Guayedra",m:"Agaete",z:"Oeste",lat:28.0900,lon:-15.7090},
+  {n:"Puerto de La Aldea",m:"La Aldea de San Nicolás",z:"Oeste",lat:28.0064,lon:-15.8172,aemet:"3502001"},
+  {n:"Güigüí",m:"La Aldea de San Nicolás",z:"Oeste",lat:27.9460,lon:-15.8260},
+  {n:"Tasarte",m:"La Aldea de San Nicolás",z:"Oeste",lat:27.8711,lon:-15.8056,aemet:"3502002"},
+  {n:"Veneguera",m:"Mogán",z:"Oeste",lat:27.8430,lon:-15.7890},
+  {n:"Puerto de Mogán",m:"Mogán",z:"Sur",lat:27.8160,lon:-15.7630},
+  {n:"Taurito",m:"Mogán",z:"Sur",lat:27.8150,lon:-15.7533,aemet:"3501201"},
+  {n:"Playa del Cura",m:"Mogán",z:"Sur",lat:27.7990,lon:-15.7330},
+  {n:"Tauro",m:"Mogán",z:"Sur",lat:27.7950,lon:-15.7270},
+  {n:"Amadores",m:"Mogán",z:"Sur",lat:27.7903,lon:-15.7244,aemet:"3501202"},
+  {n:"Puerto Rico",m:"Mogán",z:"Sur",lat:27.7850,lon:-15.7110},
+  {n:"Anfi del Mar",m:"Mogán",z:"Sur",lat:27.7730,lon:-15.6950},
+  {n:"Patalavaca",m:"Mogán",z:"Sur",lat:27.7640,lon:-15.6880},
+  {n:"Arguineguín",m:"Mogán",z:"Sur",lat:27.7580,lon:-15.6800},
+  {n:"Pasito Blanco",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7440,lon:-15.6180},
+  {n:"Meloneras",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7400,lon:-15.5980},
+  {n:"Maspalomas",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7378,lon:-15.5831,aemet:"3501901"},
+  {n:"Playa del Inglés",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7478,lon:-15.5617,aemet:"3501902"},
+  {n:"San Agustín",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7703,lon:-15.5394,aemet:"3501903"},
+  {n:"Playa del Águila",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7860,lon:-15.5130},
+  {n:"Pozo Izquierdo",m:"Santa Lucía de Tirajana",z:"Este",lat:27.8225,lon:-15.4239,aemet:"3502201"},
+  {n:"Arinaga",m:"Agüimes",z:"Este",lat:27.8569,lon:-15.3975,aemet:"3500201"},
+  {n:"Playa de Vargas",m:"Agüimes",z:"Este",lat:27.8800,lon:-15.3840},
+  {n:"El Burrero",m:"Ingenio",z:"Este",lat:27.9111,lon:-15.3875,aemet:"3501101"},
+  {n:"Ojos de Garza",m:"Telde",z:"Este",lat:27.9490,lon:-15.3730},
+  {n:"Salinetas",m:"Telde",z:"Este",lat:27.9770,lon:-15.3740},
+  {n:"Melenara",m:"Telde",z:"Este",lat:27.9875,lon:-15.3758,aemet:"3502601"},
+  {n:"Hoya del Pozo",m:"Telde",z:"Este",lat:27.9960,lon:-15.3730},
+  {n:"La Garita",m:"Telde",z:"Este",lat:28.0120,lon:-15.3710},
+];
+BEACHES.forEach((b,i)=>b.id=i);
+
+// En el APK (file://) se va directo a AEMET; en la web se pasa por el puente /aemet del servidor (AEMET no permite CORS).
+const AEMET = location.protocol==="file:" ? "https://www.aemet.es" : (window.AEMET_BASE || "/aemet");
+const TZ = "Atlantic/Canary";
+const ZONES = ["Todas","Norte","Este","Sur","Oeste"];
+const SORTS = [["calm","🟢 Más tranquilas"],["name","🔤 Nombre"],["water","🌡️ Agua más caliente"],["wind","💨 Menos viento"],["waves","🌊 Más olas"]];
+let state = {zone:"Todas",sort:"calm",q:""};
+let DATA = {}; // id -> datos
+let updatedAt = null;
+
+// ───────────────────── HTTP (sin CORS dentro del APK) ─────────────────────
+function get(url, {binary=false, timeout=20000}={}){
+  return new Promise((res,rej)=>{
+    const x = new XMLHttpRequest();
+    x.open("GET", url, true);
+    x.timeout = timeout;
+    if(binary) x.responseType = "arraybuffer";
+    x.onload = ()=> (x.status>=200 && x.status<300) || x.status===0 && x.response ? res(x.response) : rej(new Error("HTTP "+x.status));
+    x.onerror = ()=>rej(new Error("red")); x.ontimeout = ()=>rej(new Error("timeout"));
+    x.send();
+  });
+}
+const latin1 = buf => new TextDecoder("iso-8859-1").decode(buf);
+
+// ───────────────────── Open-Meteo ─────────────────────
+async function fetchOpenMeteo(){
+  const lat = BEACHES.map(b=>b.lat).join(","), lon = BEACHES.map(b=>b.lon).join(",");
+  // El modelo de oleaje es una rejilla de ~9 km: se consulta un punto mar adentro en la dirección
+  // a la que mira la playa, para no coger datos de la costa contraria.
+  const OFF = {Norte:[0.07,0], Sur:[-0.06,0], Este:[0,0.07], Oeste:[0,-0.07]};
+  const mlat = BEACHES.map(b=>(b.lat+OFF[b.z][0]).toFixed(3)).join(","), mlon = BEACHES.map(b=>(b.lon+OFF[b.z][1]).toFixed(3)).join(",");
+  const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${mlat}&longitude=${mlon}`+
+    `&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature,sea_level_height_msl`+
+    `&hourly=sea_level_height_msl,wave_height&forecast_days=3&cell_selection=sea&timezone=${TZ}`;
+  const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`+
+    `&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,weather_code,is_day`+
+    `&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&forecast_days=2&timezone=${TZ}`;
+  const [mar, wx] = await Promise.allSettled([get(marineUrl).then(JSON.parse), get(wxUrl).then(JSON.parse)]);
+  const out = {};
+  BEACHES.forEach((b,i)=>{
+    const o = {};
+    if(mar.status==="fulfilled"){ const r = Array.isArray(mar.value)?mar.value[i]:mar.value; if(r && r.current) o.marine = r; }
+    if(wx.status==="fulfilled"){ const r = Array.isArray(wx.value)?wx.value[i]:wx.value; if(r && r.current) o.wx = r; }
+    out[b.id] = o;
+  });
+  return {out, errs:[mar,wx].filter(p=>p.status==="rejected").length};
+}
+
+// ───────────────────── AEMET (XML predicción + HTML mareas) ─────────────────────
+async function fetchAemetPrediccion(code){
+  const xml = latin1(await get(`${AEMET}/xml/playas/play_v2_${code}.xml`,{binary:true}));
+  const doc = new DOMParser().parseFromString(xml,"application/xml");
+  const dias = [...doc.querySelectorAll("prediccion > dia")].map(d=>{
+    const a=(t,k)=>d.querySelector(t)?.getAttribute(k);
+    const f=d.getAttribute("fecha");
+    return {
+      fecha:`${f.slice(0,4)}-${f.slice(4,6)}-${f.slice(6,8)}`,
+      cielo:[a("estado_cielo","descripcion1"),a("estado_cielo","descripcion2")],
+      viento:[a("viento","descripcion1"),a("viento","descripcion2")],
+      oleaje:[a("oleaje","descripcion1"),a("oleaje","descripcion2")],
+      tmax:+a("t_maxima","valor1"), sterm:a("s_termica","descripcion1"),
+      tagua:+a("t_agua","valor1"), uv:+a("uv_max","valor1"),
+    };
+  });
+  return {elaborado: doc.querySelector("elaborado")?.textContent, dias};
+}
+async function fetchAemetMareas(code){
+  const html = latin1(await get(`${AEMET}/es/eltiempo/prediccion/playas?l=${code}`,{binary:true}));
+  const doc = new DOMParser().parseFromString(html,"text/html");
+  const t = doc.querySelector("#tabla_mareas"); if(!t) return null;
+  const dias = [...t.querySelectorAll("thead tr.cabecera_niv2 th")].map(th=>th.textContent.trim());
+  const rows = {};
+  t.querySelectorAll("tbody tr").forEach(tr=>{
+    const k = tr.querySelector("th")?.textContent.trim().toLowerCase();
+    rows[k] = [...tr.querySelectorAll("td")].map(td=>td.textContent.replace(/ /g," ").trim());
+  });
+  const res = dias.map((d,i)=>({dia:d,
+    pleamar:(rows.pleamar||[]).slice(i*2,i*2+2).filter(x=>/\d/.test(x)),
+    bajamar:(rows.bajamar||[]).slice(i*2,i*2+2).filter(x=>/\d/.test(x))}));
+  return res.length?res:null;
+}
+async function fetchAemetAll(){
+  const list = BEACHES.filter(b=>b.aemet);
+  let ok=0;
+  await Promise.all(list.map(async b=>{
+    const [p,m] = await Promise.allSettled([fetchAemetPrediccion(b.aemet), fetchAemetMareas(b.aemet)]);
+    const o = {};
+    if(p.status==="fulfilled" && p.value.dias.length){ o.pred=p.value; ok++; }
+    if(m.status==="fulfilled" && m.value) o.mareas=m.value;
+    AEMET_CACHE[b.id]=o;
+  }));
+  return ok;
+}
+const AEMET_CACHE = {};
+
+// ───────────────────── Cálculos ─────────────────────
+const DIRS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+const dirTxt = d => d==null?"–":DIRS[Math.round(d/22.5)%16];
+const lvlWord = w => !w?null:/d[ée]bil|flojo|calma/i.test(w)?0:/moderad/i.test(w)?1:/fuerte|muy/i.test(w)?2:null;
+const fmt = (v,d=1)=> v==null||isNaN(v)?"–":(+v).toFixed(d).replace(".",",");
+
+function nowIndex(times){
+  const now = Date.now();
+  let best=0, bd=Infinity;
+  times.forEach((t,i)=>{const d=Math.abs(new Date(t+":00").getTime()-now); if(d<bd){bd=d;best=i}});
+  return best;
+}
+function tideInfo(marine){
+  const h = marine?.hourly; if(!h?.sea_level_height_msl) return null;
+  const y = h.sea_level_height_msl, t = h.time;
+  if(y.every(v=>v==null)) return null;
+  const i = nowIndex(t);
+  const ext=[];
+  for(let k=1;k<y.length-1;k++){
+    if(y[k]==null||y[k-1]==null||y[k+1]==null) continue;
+    if(y[k]>=y[k-1]&&y[k]>y[k+1]) ext.push({k,type:"hi"});
+    else if(y[k]<=y[k-1]&&y[k]<y[k+1]) ext.push({k,type:"lo"});
+  }
+  const next = ext.find(e=>e.k>i);
+  const rising = y[Math.min(i+1,y.length-1)] > y[i];
+  return {now:y[i], rising, next: next?{type:next.type,time:t[next.k].slice(11,16),h:y[next.k]}:null, series:{t,y}, i, ext};
+}
+function estimate(d, b){
+  // nivel 0 tranquilo · 1 precaución · 2 mar/viento fuerte
+  const wave = d.marine?.current?.wave_height, wind = d.wx?.current?.wind_speed_10m, gust=d.wx?.current?.wind_gusts_10m;
+  let lv = null;
+  if(wave!=null) lv = wave<0.8?0:wave<1.5?1:2;
+  if(wind!=null){ const w = wind<20&&(gust??0)<35?0:wind<35?1:2; lv = Math.max(lv??0,w); }
+  const ae = AEMET_CACHE[b.id]?.pred?.dias?.[0];
+  if(ae){
+    const pm = new Date().getHours()>=13 ? 1 : 0;
+    const o = lvlWord(ae.oleaje[pm]) ?? lvlWord(ae.oleaje[0]);
+    const v = lvlWord(ae.viento[pm]) ?? lvlWord(ae.viento[0]);
+    [o,v].forEach(x=>{ if(x!=null) lv=Math.max(lv??0,x)});
+  }
+  return lv;
+}
+const LV = [
+  {t:"TRANQUILA",c:"var(--ok)"},{t:"PRECAUCIÓN",c:"var(--warn)"},{t:"MAR/VIENTO FUERTE",c:"var(--bad)"}
+];
+function waterColor(t){
+  if(t==null) return "var(--mut)";
+  const stops=[[18,"#60a5fa"],[20,"#22d3ee"],[22,"#a3e635"],[24,"#fbbf24"],[26,"#fb923c"],[28,"#f472b6"]];
+  for(const [v,c] of stops) if(t<=v) return c; return "#f472b6";
+}
+
+// ───────────────────── Carga ─────────────────────
+async function load(){
+  const btn = document.getElementById("refresh"); btn.classList.add("spin");
+  setStatus("Consultando AEMET y Open-Meteo…");
+  try{
+    const [om, aeOk] = await Promise.all([fetchOpenMeteo(), fetchAemetAll().catch(()=>0)]);
+    DATA = {};
+    BEACHES.forEach(b=>{
+      const o = {...om.out[b.id], ...(AEMET_CACHE[b.id]||{})};
+      o.tide = tideInfo(o.marine);
+      o.has = !!(o.marine||o.wx||o.pred);
+      o.lv = estimate(o,b);
+      DATA[b.id]=o;
+    });
+    updatedAt = new Date();
+    try{ localStorage.setItem("pgc_cache", JSON.stringify({DATA, AEMET_CACHE, t:updatedAt.getTime()})); }catch(e){}
+    const msg = [];
+    if(om.errs) msg.push("Open-Meteo no respondió");
+    if(!aeOk) msg.push("AEMET no respondió");
+    setStatus(msg.join(" · "));
+  }catch(e){
+    setStatus("Sin conexión: mostrando los últimos datos guardados");
+  }
+  btn.classList.remove("spin");
+  render();
+}
+function loadCache(){
+  try{
+    const c = JSON.parse(localStorage.getItem("pgc_cache")||"null"); if(!c) return;
+    DATA=c.DATA; Object.assign(AEMET_CACHE,c.AEMET_CACHE); updatedAt=new Date(c.t);
+    BEACHES.forEach(b=>{ if(DATA[b.id]) DATA[b.id].tide = tideInfo(DATA[b.id].marine); });
+    render();
+  }catch(e){}
+}
+let statusMsg="";
+function setStatus(m){ statusMsg=m; renderStatus(); }
+function renderStatus(){
+  const withData = BEACHES.filter(b=>DATA[b.id]?.has).length;
+  const up = updatedAt? updatedAt.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}) : "–";
+  document.getElementById("sub").textContent = `${withData} playas con datos · act. ${up}`;
+  document.getElementById("status").innerHTML =
+    (statusMsg?`<span>${statusMsg}</span>`:"")+
+    `<span class="legend"><i style="background:var(--ok)"></i>tranquila<i style="background:var(--warn)"></i>precaución<i style="background:var(--bad)"></i>fuerte</span>`;
+}
+
+// ───────────────────── Render lista ─────────────────────
+function chips(){
+  document.getElementById("zones").innerHTML = ZONES.map(z=>`<button class="chip ${state.zone===z?"on":""}" data-z="${z}">${z}</button>`).join("");
+  document.getElementById("sorts").innerHTML = SORTS.map(([k,l])=>`<button class="chip sort ${state.sort===k?"on":""}" data-s="${k}">${l}</button>`).join("");
+}
+function sortVal(b){
+  const d=DATA[b.id]||{};
+  switch(state.sort){
+    case "name": return b.n;
+    case "water": return -(d.marine?.current?.sea_surface_temperature ?? d.pred?.dias?.[0]?.tagua ?? -99);
+    case "wind": return d.wx?.current?.wind_speed_10m ?? 999;
+    case "waves": return -(d.marine?.current?.wave_height ?? -1);
+    default: return (d.lv??3)*100 + (d.marine?.current?.wave_height??5)*10 + (d.wx?.current?.wind_speed_10m??50)/10;
+  }
+}
+function render(){
+  chips(); renderStatus();
+  const q = state.q.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  let list = BEACHES.filter(b=>DATA[b.id]?.has)
+    .filter(b=>state.zone==="Todas"||b.z===state.zone)
+    .filter(b=>!q || (b.n+" "+b.m).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(q));
+  list.sort((a,b)=>{const x=sortVal(a),y=sortVal(b); return typeof x==="string"?x.localeCompare(y):x-y;});
+  const el = document.getElementById("list"); el.className="";
+  if(!list.length){ el.innerHTML = `<div class="empty">${Object.keys(DATA).length?"No hay playas con esos filtros":"Cargando datos…"}</div>`; return; }
+  el.innerHTML = list.map((b,idx)=>card(b,idx)).join("");
+}
+function card(b,idx){
+  const d = DATA[b.id], c=d.wx?.current, m=d.marine?.current, ae=d.pred?.dias?.[0];
+  const lv = d.lv!=null?LV[d.lv]:null;
+  const water = m?.sea_surface_temperature ?? ae?.tagua;
+  const tide = d.tide;
+  const tideTxt = tide? (tide.rising?"↑ Subiendo":"↓ Bajando") : (d.mareas?"ver":"–");
+  const nextTide = tide?.next ? `${tide.next.type==="hi"?"Pleamar":"Bajamar"} ${tide.next.time}` : "";
+  const pm = new Date().getHours()>=13?1:0;
+  return `<div class="card" style="--st:${lv?lv.c:"var(--dim)"};animation-delay:${Math.min(idx*25,400)}ms" data-id="${b.id}">
+    <div class="ch">
+      <div><div class="name">${b.n}</div><div class="muni">${b.m} · ${b.z}</div></div>
+      ${lv?`<div class="badge">${lv.t}</div>`:""}
+    </div>
+    <div class="grid">
+      <div class="m wind"><div class="ic"><span class="arrow" style="transform:rotate(${(c?.wind_direction_10m??0)+180}deg)">⬆</span></div>
+        <div class="v">${fmt(c?.wind_speed_10m,0)}</div><div class="l">km/h ${dirTxt(c?.wind_direction_10m)}</div></div>
+      <div class="m wave"><div class="ic">🌊</div><div class="v">${m?fmt(m.wave_height):"–"}</div><div class="l">m${m?.wave_period?" · "+fmt(m.wave_period,0)+"s":""}</div></div>
+      <div class="m water"><div class="ic">🌡️</div><div class="v" style="color:${waterColor(water)}">${fmt(water,water%1?1:0)}°</div><div class="l">agua</div></div>
+      <div class="m tide"><div class="ic">🌙</div><div class="v" style="font-size:13px;margin-top:4px">${tideTxt}</div><div class="l">${nextTide||"marea"}</div></div>
+    </div>
+    <div class="foot">
+      ${c?.wind_gusts_10m!=null?`<span class="tag">Rachas <b>${fmt(c.wind_gusts_10m,0)}</b> km/h</span>`:""}
+      ${c?.uv_index!=null?`<span class="tag">UV <b>${fmt(c.uv_index,0)}</b></span>`:""}
+      ${c?.temperature_2m!=null?`<span class="tag">Aire <b>${fmt(c.temperature_2m,0)}°</b></span>`:""}
+      ${ae?`<span class="tag src">AEMET: oleaje <b>${ae.oleaje[pm]||ae.oleaje[0]}</b> · viento <b>${ae.viento[pm]||ae.viento[0]}</b></span>`:""}
+    </div>
+  </div>`;
+}
+
+// ───────────────────── Detalle ─────────────────────
+function tideSvg(tide){
+  const {t,y}=tide.series, n=Math.min(y.length,48);
+  const ys=y.slice(0,n), W=340,H=130,P=16;
+  const vals=ys.filter(v=>v!=null), mn=Math.min(...vals), mx=Math.max(...vals);
+  const X=k=>P+(W-2*P)*k/(n-1), Y=v=>H-P-(H-2*P)*(v-mn)/((mx-mn)||1);
+  let d=""; ys.forEach((v,k)=>{ if(v!=null) d+=(d?"L":"M")+X(k).toFixed(1)+","+Y(v).toFixed(1)});
+  const area = d+`L${X(n-1)},${H-P}L${X(0)},${H-P}Z`;
+  const labels = tide.ext.filter(e=>e.k<n).map(e=>`<circle cx="${X(e.k)}" cy="${Y(ys[e.k])}" r="3.5" fill="${e.type==="hi"?"#22d3ee":"#fb923c"}"/>
+    <text x="${X(e.k)}" y="${e.type==="hi"?Y(ys[e.k])-8:Y(ys[e.k])+15}" fill="#cbd5ff" font-size="9.5" text-anchor="middle">${t[e.k].slice(11,16)}</text>`).join("");
+  const days = t.slice(0,n).map((s,k)=>s.endsWith("00:00")&&k>0?`<line x1="${X(k)}" x2="${X(k)}" y1="${P}" y2="${H-P}" stroke="#2a3670" stroke-dasharray="3 3"/>`:"").join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%">
+    <defs><linearGradient id="tg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".45"/><stop offset="1" stop-color="#a78bfa" stop-opacity="0"/></linearGradient>
+    <linearGradient id="tl" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#f472b6"/></linearGradient></defs>
+    ${days}<path d="${area}" fill="url(#tg)"/><path d="${d}" fill="none" stroke="url(#tl)" stroke-width="2.5"/>
+    <line x1="${X(tide.i)}" x2="${X(tide.i)}" y1="${P}" y2="${H-P+2}" stroke="#a3e635" stroke-width="1.5"/>
+    <text x="${X(tide.i)}" y="${H-1}" fill="#a3e635" font-size="9.5" font-weight="700" text-anchor="middle">ahora</text>${labels}</svg>`;
+}
+function windBars(wx){
+  const h=wx?.hourly; if(!h) return "";
+  const i=nowIndex(h.time), n=12, sp=h.wind_speed_10m.slice(i,i+n), dir=h.wind_direction_10m.slice(i,i+n);
+  const mx=Math.max(...sp,25);
+  return `<div class="bars" style="margin:18px 0 20px">${sp.map((v,k)=>`<div class="bar" style="height:${Math.max(4,v/mx*100)}%;${v>=30?"background:linear-gradient(180deg,#fb7185,#f472b6)":v<15?"background:linear-gradient(180deg,#22d3ee,#60a5fa)":""}">
+     <b>${Math.round(v)}</b><span>${h.time[i+k].slice(11,13)}h</span></div>`).join("")}</div>
+     <div style="display:flex;gap:4px">${dir.map(d=>`<div style="flex:1;text-align:center;font-size:12px;color:var(--cyan)"><span class="arrow" style="transform:rotate(${d+180}deg)">⬆</span></div>`).join("")}</div>`;
+}
+function lvlSpan(w){ const l=lvlWord(w); return `<span class="${l!=null?"lvl"+l:""}">${w||"–"}</span>`; }
+function open(id){
+  const b=BEACHES[id], d=DATA[id], c=d.wx?.current, m=d.marine?.current, lv=d.lv!=null?LV[d.lv]:null;
+  const ae=d.pred;
+  let h = `<div class="grab"></div><button class="close" id="x">✕</button>
+    <h2>${b.n}</h2><div class="muni">${b.m} · ${b.z}${lv?` · <b style="color:${lv.c}">${lv.t}</b>`:""}</div>
+    <div class="grid" style="margin-top:14px">
+      <div class="m wind"><div class="ic"><span class="arrow" style="transform:rotate(${(c?.wind_direction_10m??0)+180}deg)">⬆</span></div><div class="v">${fmt(c?.wind_speed_10m,0)}</div><div class="l">km/h ${dirTxt(c?.wind_direction_10m)}</div></div>
+      <div class="m wave"><div class="ic">🌊</div><div class="v">${fmt(m?.wave_height)}</div><div class="l">m de ${dirTxt(m?.wave_direction)}</div></div>
+      <div class="m water"><div class="ic">🌡️</div><div class="v" style="color:${waterColor(m?.sea_surface_temperature)}">${fmt(m?.sea_surface_temperature)}°</div><div class="l">agua</div></div>
+      <div class="m tide"><div class="ic">📏</div><div class="v">${d.tide?(d.tide.now>0?"+":"")+fmt(d.tide.now,2):"–"}</div><div class="l">m nivel mar</div></div>
+    </div>`;
+  if(d.mareas){
+    h+=`<div class="sec"><h3>Mareas oficiales · IHM vía AEMET</h3><div class="box"><div class="tides">${
+      d.mareas.map(x=>[...x.pleamar.map(t=>({t,hi:1})),...x.bajamar.map(t=>({t,hi:0}))]
+        .sort((a,b)=>{const m=s=>{const [h,mi]=s.split(":");return h*60+ +mi}; return m(a.t)-m(b.t);})
+        .map(e=>`<div class="td ${e.hi?"hi":"lo"}"><div class="k">${x.dia} · ${e.hi?"pleamar":"bajamar"}</div><div class="t">${e.hi?"↑":"↓"} ${e.t}</div></div>`).join("")).join("")
+    }</div></div></div>`;
+  }
+  if(d.tide) h+=`<div class="sec"><h3>Curva de marea 48 h · Open-Meteo</h3><div class="box">${tideSvg(d.tide)}</div></div>`;
+  if(d.wx?.hourly) h+=`<div class="sec"><h3>Viento próximas 12 h (km/h)</h3><div class="box">${windBars(d.wx)}</div></div>`;
+  if(ae?.dias?.length){
+    const D=ae.dias, day=f=>new Date(f+"T12:00").toLocaleDateString("es-ES",{weekday:"short",day:"numeric"});
+    h+=`<div class="sec"><h3>Predicción oficial AEMET</h3><div class="box" style="overflow-x:auto"><table class="ae">
+      <tr><th></th>${D.map(x=>`<th colspan="2">${day(x.fecha)}</th>`).join("")}</tr>
+      <tr><th></th>${D.map(()=>`<th>mañ.</th><th>tarde</th>`).join("")}</tr>
+      <tr><td>Cielo</td>${D.map(x=>`<td>${x.cielo[0]||"–"}</td><td>${x.cielo[1]||"–"}</td>`).join("")}</tr>
+      <tr><td>Viento</td>${D.map(x=>`<td>${lvlSpan(x.viento[0])}</td><td>${lvlSpan(x.viento[1])}</td>`).join("")}</tr>
+      <tr><td>Oleaje</td>${D.map(x=>`<td>${lvlSpan(x.oleaje[0])}</td><td>${lvlSpan(x.oleaje[1])}</td>`).join("")}</tr>
+      <tr><td>Agua</td>${D.map(x=>`<td colspan="2" style="color:${waterColor(x.tagua)};font-weight:700">${x.tagua}°</td>`).join("")}</tr>
+      <tr><td>T. máx</td>${D.map(x=>`<td colspan="2">${x.tmax}°</td>`).join("")}</tr>
+      <tr><td>UV máx</td>${D.map(x=>`<td colspan="2">${x.uv}</td>`).join("")}</tr>
+      <tr><td>Sensación</td>${D.map(x=>`<td colspan="2" style="font-size:11px">${x.sterm||"–"}</td>`).join("")}</tr>
+    </table></div></div>`;
+  }
+  h+=`<div class="note">El estado (tranquila / precaución / fuerte) es una estimación a partir de oleaje y viento, <b>no</b> es la bandera oficial del socorrista: respeta siempre la bandera de la playa.<br>
+    Fuentes: AEMET (© AEMET) · Instituto Hidrográfico de la Marina · Open-Meteo (modelos de oleaje y Copernicus Marine). El oleaje y el nivel del mar de Open-Meteo se calculan mar adentro frente a la playa: en playas resguardadas (barra de Las Canteras, puertos, calas) el agua suele estar más tranquila. Orientativo, no apto para navegación.</div>`;
+  const p=document.getElementById("panel"); p.innerHTML=h; p.scrollTop=0;
+  document.getElementById("sheet").classList.add("open");
+  document.getElementById("x").onclick=closeSheet;
+  history.pushState({sheet:1},"");
+}
+function closeSheet(){ const s=document.getElementById("sheet"); if(s.classList.contains("open")){ s.classList.remove("open"); } }
+window.addEventListener("popstate",closeSheet);
+window.androidBack = ()=>{ const s=document.getElementById("sheet"); if(s.classList.contains("open")){ history.back(); return true;} return false; };
+
+// ───────────────────── Eventos ─────────────────────
+document.getElementById("zones").onclick=e=>{const z=e.target.dataset.z; if(z){state.zone=z; render();}};
+document.getElementById("sorts").onclick=e=>{const s=e.target.dataset.s; if(s){state.sort=s; render();}};
+document.getElementById("q").oninput=e=>{state.q=e.target.value; render();};
+document.getElementById("list").onclick=e=>{const c=e.target.closest(".card"); if(c) open(+c.dataset.id);};
+document.getElementById("sheet").onclick=e=>{ if(e.target.id==="sheet") history.back(); };
+document.getElementById("refresh").onclick=load;
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && updatedAt && Date.now()-updatedAt>15*60e3) load(); });
+
+chips(); loadCache(); load();
+</script>
+</body>
+</html>

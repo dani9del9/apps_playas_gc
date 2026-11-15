@@ -1,0 +1,8 @@
+{
+  "name": "playas-gc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Viento, oleaje, mareas y agua de las playas de Gran Canaria (web + APK)",
+  "scripts": { "start": "node web/server.js" },
+  "engines": { "node": ">=18" }
+}
