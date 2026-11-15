@@ -38,6 +38,14 @@ h1 span{background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-backgr
 .chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600}
 .chip.on{color:#0a0f22;border-color:transparent;background:linear-gradient(90deg,var(--cyan),var(--violet))}
 .chip.sort.on{background:linear-gradient(90deg,var(--pink),var(--amber))}
+.chip.favchip{color:var(--pink);border-color:rgba(244,114,182,.45)}
+.chip.favchip.on{color:#fff;background:linear-gradient(90deg,#f43f5e,var(--pink));border-color:transparent}
+.fav{flex:none;border:0;background:rgba(255,255,255,.06);width:36px;height:36px;border-radius:12px;font-size:19px;line-height:1;color:var(--dim);display:grid;place-items:center;cursor:pointer;position:relative;z-index:1;transition:transform .15s}
+.fav.on{color:#fb4f7d;background:rgba(251,79,125,.14);text-shadow:0 0 12px rgba(251,79,125,.6)}
+.fav.pop{animation:heart .35s ease}
+@keyframes heart{40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.card.isfav{border-color:rgba(251,79,125,.35)}
+.panel .fav{position:absolute;right:58px;top:14px}
 main{padding:4px 14px calc(24px + env(safe-area-inset-bottom))}
 .status{color:var(--mut);font-size:12px;margin:4px 4px 10px;display:flex;gap:10px;flex-wrap:wrap}
 .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px 0 8px}
@@ -180,7 +188,18 @@ const AEMET = location.protocol==="file:" ? "https://www.aemet.es" : (window.AEM
 const TZ = "Atlantic/Canary";
 const ZONES = ["Todas","Norte","Este","Sur","Oeste"];
 const SORTS = [["calm","🟢 Más tranquilas"],["name","🔤 Nombre"],["water","🌡️ Agua más caliente"],["wind","💨 Menos viento"],["waves","🌊 Más olas"]];
-let state = {zone:"Todas",sort:"calm",q:""};
+let state = {zone:"Todas",sort:"calm",q:"",onlyFav:false};
+// ───── Favoritas (se guardan en el móvil/navegador, por nombre de playa) ─────
+let FAVS = new Set();
+try{ FAVS = new Set(JSON.parse(localStorage.getItem("pgc_favs")||"[]")); state.onlyFav = localStorage.getItem("pgc_onlyfav")==="1"; }catch(e){}
+const isFav = b => FAVS.has(b.n);
+function toggleFav(id, btn){
+  const b = BEACHES[id];
+  if(FAVS.has(b.n)) FAVS.delete(b.n); else FAVS.add(b.n);
+  try{ localStorage.setItem("pgc_favs", JSON.stringify([...FAVS])); }catch(e){}
+  if(btn){ btn.classList.toggle("on", isFav(b)); btn.textContent = isFav(b)?"♥":"♡"; btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop"); }
+}
+const heart = b => `<button class="fav ${isFav(b)?"on":""}" data-fav="${b.id}" aria-label="Favorita">${isFav(b)?"♥":"♡"}</button>`;
 let DATA = {}; // id -> datos
 let updatedAt = null;
 
@@ -367,7 +386,7 @@ function renderStatus(){
 
 // ───────────────────── Render lista ─────────────────────
 function chips(){
-  document.getElementById("zones").innerHTML = ZONES.map(z=>`<button class="chip ${state.zone===z?"on":""}" data-z="${z}">${z}</button>`).join("");
+  document.getElementById("zones").innerHTML = `<button class="chip favchip ${state.onlyFav?"on":""}" data-onlyfav="1">${state.onlyFav?"♥":"♡"} Favoritas${FAVS.size?" ("+FAVS.size+")":""}</button>` + ZONES.map(z=>`<button class="chip ${state.zone===z?"on":""}" data-z="${z}">${z}</button>`).join("");
   document.getElementById("sorts").innerHTML = SORTS.map(([k,l])=>`<button class="chip sort ${state.sort===k?"on":""}" data-s="${k}">${l}</button>`).join("");
 }
 function sortVal(b){
@@ -385,10 +404,15 @@ function render(){
   const q = state.q.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
   let list = BEACHES.filter(b=>DATA[b.id]?.has)
     .filter(b=>state.zone==="Todas"||b.z===state.zone)
+    .filter(b=>!state.onlyFav || isFav(b))
     .filter(b=>!q || (b.n+" "+b.m).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(q));
   list.sort((a,b)=>{const x=sortVal(a),y=sortVal(b); return typeof x==="string"?x.localeCompare(y):x-y;});
   const el = document.getElementById("list"); el.className="";
-  if(!list.length){ el.innerHTML = `<div class="empty">${Object.keys(DATA).length?"No hay playas con esos filtros":"Cargando datos…"}</div>`; return; }
+  if(!list.length){
+    const msg = !Object.keys(DATA).length ? "Cargando datos…"
+      : state.onlyFav && !FAVS.size ? "Aún no tienes playas favoritas.<br>Toca el ♡ de una playa para añadirla."
+      : "No hay playas con esos filtros";
+    el.innerHTML = `<div class="empty">${msg}</div>`; return; }
   el.innerHTML = list.map((b,idx)=>card(b,idx)).join("");
 }
 function card(b,idx){
@@ -399,10 +423,11 @@ function card(b,idx){
   const tideTxt = tide? (tide.rising?"↑ Subiendo":"↓ Bajando") : (d.mareas?"ver":"–");
   const nextTide = tide?.next ? `${tide.next.type==="hi"?"Pleamar":"Bajamar"} ${tide.next.time}` : "";
   const pm = new Date().getHours()>=13?1:0;
-  return `<div class="card" style="--st:${lv?lv.c:"var(--dim)"};animation-delay:${Math.min(idx*25,400)}ms" data-id="${b.id}">
+  return `<div class="card ${isFav(b)?"isfav":""}" style="--st:${lv?lv.c:"var(--dim)"};animation-delay:${Math.min(idx*25,400)}ms" data-id="${b.id}">
     <div class="ch">
       <div><div class="name">${b.n}</div><div class="muni">${b.m} · ${b.z}</div></div>
-      ${lv?`<div class="badge">${lv.t}</div>`:""}
+      ${lv?`<div class="badge">${lv.t}</div>`:"<div style='margin-left:auto'></div>"}
+      ${heart(b)}
     </div>
     <div class="grid">
       <div class="m wind"><div class="ic"><span class="arrow" style="transform:rotate(${(c?.wind_direction_10m??0)+180}deg)">⬆</span></div>
@@ -450,7 +475,7 @@ function lvlSpan(w){ const l=lvlWord(w); return `<span class="${l!=null?"lvl"+l:
 function open(id){
   const b=BEACHES[id], d=DATA[id], c=d.wx?.current, m=d.marine?.current, lv=d.lv!=null?LV[d.lv]:null;
   const ae=d.pred;
-  let h = `<div class="grab"></div><button class="close" id="x">✕</button>
+  let h = `<div class="grab"></div><button class="close" id="x">✕</button>${heart(b)}
     <h2>${b.n}</h2><div class="muni">${b.m} · ${b.z}${lv?` · <b style="color:${lv.c}">${lv.t}</b>`:""}</div>
     <div class="grid" style="margin-top:14px">
       <div class="m wind"><div class="ic"><span class="arrow" style="transform:rotate(${(c?.wind_direction_10m??0)+180}deg)">⬆</span></div><div class="v">${fmt(c?.wind_speed_10m,0)}</div><div class="l">km/h ${dirTxt(c?.wind_direction_10m)}</div></div>
@@ -493,10 +518,23 @@ window.addEventListener("popstate",closeSheet);
 window.androidBack = ()=>{ const s=document.getElementById("sheet"); if(s.classList.contains("open")){ history.back(); return true;} return false; };
 
 // ───────────────────── Eventos ─────────────────────
-document.getElementById("zones").onclick=e=>{const z=e.target.dataset.z; if(z){state.zone=z; render();}};
+document.getElementById("zones").onclick=e=>{
+  const t=e.target.closest("button"); if(!t) return;
+  if(t.dataset.onlyfav){ state.onlyFav=!state.onlyFav; try{localStorage.setItem("pgc_onlyfav",state.onlyFav?"1":"0")}catch(e){} render(); return; }
+  if(t.dataset.z){ state.zone=t.dataset.z; render(); }
+};
 document.getElementById("sorts").onclick=e=>{const s=e.target.dataset.s; if(s){state.sort=s; render();}};
 document.getElementById("q").oninput=e=>{state.q=e.target.value; render();};
-document.getElementById("list").onclick=e=>{const c=e.target.closest(".card"); if(c) open(+c.dataset.id);};
+document.getElementById("list").onclick=e=>{
+  const f=e.target.closest(".fav");
+  if(f){ toggleFav(+f.dataset.fav, f); f.closest(".card").classList.toggle("isfav", f.classList.contains("on"));
+         if(state.onlyFav) setTimeout(render, 350); else chips(); return; }
+  const c=e.target.closest(".card"); if(c) open(+c.dataset.id);
+};
+document.getElementById("panel").addEventListener("click",e=>{
+  const f=e.target.closest(".fav"); if(!f) return;
+  toggleFav(+f.dataset.fav, f); render();
+});
 document.getElementById("sheet").onclick=e=>{ if(e.target.id==="sheet") history.back(); };
 document.getElementById("refresh").onclick=load;
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && updatedAt && Date.now()-updatedAt>15*60e3) load(); });
