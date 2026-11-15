@@ -39,9 +39,20 @@ h1 span{background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-backgr
 .chip.on{color:#0a0f22;border-color:transparent;background:linear-gradient(90deg,var(--cyan),var(--violet))}
 .chip.sort.on{background:linear-gradient(90deg,var(--pink),var(--amber))}
 .chip.favchip{color:var(--pink);border-color:rgba(244,114,182,.45)}
+.chip.camchip.on{color:#fff;background:linear-gradient(90deg,var(--violet),var(--pink));border-color:transparent}
 .chip.favchip.on{color:#fff;background:linear-gradient(90deg,#f43f5e,var(--pink));border-color:transparent}
-.fav{flex:none;border:0;background:rgba(255,255,255,.06);width:36px;height:36px;border-radius:12px;font-size:19px;line-height:1;color:var(--dim);display:grid;place-items:center;cursor:pointer;position:relative;z-index:1;transition:transform .15s}
-.fav.on{color:#fb4f7d;background:rgba(251,79,125,.14);text-shadow:0 0 12px rgba(251,79,125,.6)}
+.fav{flex:none;border:0;background:rgba(255,255,255,.06);width:38px;height:38px;border-radius:12px;color:#8a94c8;display:grid;place-items:center;cursor:pointer;position:relative;z-index:1;transition:transform .15s, background .15s}
+/* corazón: apagado (gris azulado) / encendido (rojo coral con contorno, sombra y brillo) */
+.hrt{width:24px;height:23px;display:block;overflow:visible;--hb:#323a68;--hs:#5c6699;--hd:#2a3160;--hh:rgba(255,255,255,.18)}
+.hrt .h-body{fill:var(--hb);stroke:var(--hs);stroke-width:2.6;stroke-linejoin:round;transition:fill .2s,stroke .2s}
+.hrt .h-shade{fill:var(--hd);transition:fill .2s}
+.hrt .h-hl{fill:none;stroke:var(--hh);stroke-width:2.3;stroke-linecap:round}
+.hrt .h-dot{fill:var(--hh)}
+.fav.on .hrt, .chip.favchip.on .hrt, .fav-inline .hrt{--hb:#fb5a52;--hs:#8a4646;--hd:#e0473f;--hh:#fff}
+.fav.on .hrt{filter:drop-shadow(0 2px 6px rgba(251,90,82,.5))}
+.fav.on{background:rgba(251,90,82,.13)}
+.chip.favchip .hrt{display:inline-block;width:16px;height:15px;vertical-align:-3px;margin-right:4px}
+.fav-inline .hrt{display:inline-block;width:17px;height:16px;vertical-align:-3px}
 .fav.pop{animation:heart .35s ease}
 @keyframes heart{40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .card.isfav{border-color:rgba(251,79,125,.35)}
@@ -208,18 +219,25 @@ const AEMET = location.protocol==="file:" ? "https://www.aemet.es" : (window.AEM
 const TZ = "Atlantic/Canary";
 const ZONES = ["Todas","Norte","Este","Sur","Oeste"];
 const SORTS = [["calm","🟢 Más tranquilas"],["name","🔤 Nombre"],["water","🌡️ Agua más caliente"],["wind","💨 Menos viento"],["waves","🌊 Más olas"]];
-let state = {zone:"Todas",sort:"calm",q:"",onlyFav:false};
+let state = {zone:"Todas",sort:"calm",q:"",onlyFav:false,onlyCam:false};
 // ───── Favoritas (se guardan en el móvil/navegador, por nombre de playa) ─────
 let FAVS = new Set();
 try{ FAVS = new Set(JSON.parse(localStorage.getItem("pgc_favs")||"[]")); state.onlyFav = localStorage.getItem("pgc_onlyfav")==="1"; }catch(e){}
 const isFav = b => FAVS.has(b.n);
+// Corazón redondeado y rechoncho (SVG): relleno si es favorita, solo contorno si no.
+const HEART_SVG = `<svg class="hrt" viewBox="0 0 32 30" aria-hidden="true">
+  <path class="h-body" d="M16 27.4c-.6 0-1.2-.2-1.7-.6C7.9 21.9 2.8 17.6 2.8 11.5 2.8 7.1 6.2 3.6 10.4 3.6c2.4 0 4.3 1.1 5.6 2.9 1.3-1.8 3.2-2.9 5.6-2.9 4.2 0 7.6 3.5 7.6 7.9 0 6.1-5.1 10.4-11.5 15.3-.5.4-1.1.6-1.7.6z"/>
+  <path class="h-shade" d="M22.6 6.2c2.8.7 4.5 3.1 4.5 5.8 0 5.3-4.6 9.2-10.4 13.8.9-.1 1.5-.6 2.2-1.2 5.3-4.3 9.2-8 9.2-12.9 0-2.7-1.8-5-4.4-5.6-.4 0-.8 0-1.1.1z"/>
+  <path class="h-hl" d="M9.6 7.6c-2 .5-3.3 2.2-3.5 4.3"/>
+  <circle class="h-dot" cx="6.1" cy="15.1" r="1.25"/>
+</svg>`;
 function toggleFav(id, btn){
   const b = BEACHES[id];
   if(FAVS.has(b.n)) FAVS.delete(b.n); else FAVS.add(b.n);
   try{ localStorage.setItem("pgc_favs", JSON.stringify([...FAVS])); }catch(e){}
-  if(btn){ btn.classList.toggle("on", isFav(b)); btn.textContent = isFav(b)?"♥":"♡"; btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop"); }
+  if(btn){ btn.classList.toggle("on", isFav(b)); btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop"); }
 }
-const heart = b => `<button class="fav ${isFav(b)?"on":""}" data-fav="${b.id}" aria-label="Favorita">${isFav(b)?"♥":"♡"}</button>`;
+const heart = b => `<button class="fav ${isFav(b)?"on":""}" data-fav="${b.id}" aria-label="Favorita">${HEART_SVG}</button>`;
 let DATA = {}; // id -> datos
 let updatedAt = null;
 
@@ -406,7 +424,8 @@ function renderStatus(){
 
 // ───────────────────── Render lista ─────────────────────
 function chips(){
-  document.getElementById("zones").innerHTML = `<button class="chip favchip ${state.onlyFav?"on":""}" data-onlyfav="1">${state.onlyFav?"♥":"♡"} Favoritas${FAVS.size?" ("+FAVS.size+")":""}</button>` + ZONES.map(z=>`<button class="chip ${state.zone===z?"on":""}" data-z="${z}">${z}</button>`).join("");
+  document.getElementById("zones").innerHTML = `<button class="chip favchip ${state.onlyFav?"on":""}" data-onlyfav="1">${HEART_SVG} Favoritas${FAVS.size?" ("+FAVS.size+")":""}</button>`
+    + `<button class="chip camchip ${state.onlyCam?"on":""}" data-onlycam="1">📹 Con webcam</button>` + ZONES.map(z=>`<button class="chip ${state.zone===z?"on":""}" data-z="${z}">${z}</button>`).join("");
   document.getElementById("sorts").innerHTML = SORTS.map(([k,l])=>`<button class="chip sort ${state.sort===k?"on":""}" data-s="${k}">${l}</button>`).join("");
 }
 function sortVal(b){
@@ -425,12 +444,13 @@ function render(){
   let list = BEACHES.filter(b=>DATA[b.id]?.has)
     .filter(b=>state.zone==="Todas"||b.z===state.zone)
     .filter(b=>!state.onlyFav || isFav(b))
+    .filter(b=>!state.onlyCam || b.cams.length)
     .filter(b=>!q || (b.n+" "+b.m).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(q));
   list.sort((a,b)=>{const x=sortVal(a),y=sortVal(b); return typeof x==="string"?x.localeCompare(y):x-y;});
   const el = document.getElementById("list"); el.className="";
   if(!list.length){
     const msg = !Object.keys(DATA).length ? "Cargando datos…"
-      : state.onlyFav && !FAVS.size ? "Aún no tienes playas favoritas.<br>Toca el ♡ de una playa para añadirla."
+      : state.onlyFav && !FAVS.size ? `Aún no tienes playas favoritas.<br>Toca el <span class="fav-inline">${HEART_SVG}</span> de una playa para añadirla.`
       : "No hay playas con esos filtros";
     el.innerHTML = `<div class="empty">${msg}</div>`; return; }
   el.innerHTML = list.map((b,idx)=>card(b,idx)).join("");
@@ -533,7 +553,6 @@ function open(id){
       <div class="m water"><div class="ic">🌡️</div><div class="v" style="color:${waterColor(m?.sea_surface_temperature)}">${fmt(m?.sea_surface_temperature)}°</div><div class="l">agua</div></div>
       <div class="m tide"><div class="ic">📏</div><div class="v">${d.tide?(d.tide.now>0?"+":"")+fmt(d.tide.now,2):"–"}</div><div class="l">m nivel mar</div></div>
     </div>`;
-  h+=`<div class="sec"><h3>Ubicación</h3>${mapHtml(b)}</div>`;
   if(b.cams.length){
     h+=`<div class="sec"><h3><span class="live"></span>Webcams en directo</h3><div class="cams">${
       b.cams.map(c=>{ const [t,src]=c.t.split(" · "); return `<a class="cam" href="${c.u}" target="_blank" rel="noopener"><span class="ic">📹</span><span><b>${t}</b><small>${src||""} · se abre en su web</small></span><span class="go">↗</span></a>`; }).join("")
@@ -564,6 +583,7 @@ function open(id){
   }
   h+=`<div class="note">El estado (tranquila / precaución / fuerte) es una estimación a partir de oleaje y viento, <b>no</b> es la bandera oficial del socorrista: respeta siempre la bandera de la playa.<br>
     Fuentes: AEMET (© AEMET) · Instituto Hidrográfico de la Marina · Open-Meteo (modelos de oleaje y Copernicus Marine). El oleaje y el nivel del mar de Open-Meteo se calculan mar adentro frente a la playa: en playas resguardadas (barra de Las Canteras, puertos, calas) el agua suele estar más tranquila. Orientativo, no apto para navegación.</div>`;
+  h+=`<div class="sec"><h3>Ubicación</h3>${mapHtml(b)}</div>`;
   const p=document.getElementById("panel"); p.innerHTML=h; p.scrollTop=0;
   document.getElementById("sheet").classList.add("open");
   document.getElementById("x").onclick=closeSheet;
@@ -576,6 +596,7 @@ window.androidBack = ()=>{ const s=document.getElementById("sheet"); if(s.classL
 // ───────────────────── Eventos ─────────────────────
 document.getElementById("zones").onclick=e=>{
   const t=e.target.closest("button"); if(!t) return;
+  if(t.dataset.onlycam){ state.onlyCam=!state.onlyCam; render(); return; }
   if(t.dataset.onlyfav){ state.onlyFav=!state.onlyFav; try{localStorage.setItem("pgc_onlyfav",state.onlyFav?"1":"0")}catch(e){} render(); return; }
   if(t.dataset.z){ state.zone=t.dataset.z; render(); }
 };
