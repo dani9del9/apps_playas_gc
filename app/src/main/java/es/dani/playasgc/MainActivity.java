@@ -2,7 +2,11 @@ package es.dani.playasgc;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -29,7 +33,19 @@ public class MainActivity extends Activity {
         s.setAllowUniversalAccessFromFileURLs(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-        web.setWebViewClient(new WebViewClient());
+        // Los enlaces externos (webcams) se abren en el navegador del móvil, no dentro de la app.
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                String scheme = uri.getScheme();
+                if ("http".equals(scheme) || "https".equals(scheme)) {
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (ActivityNotFoundException e) { /* sin navegador */ }
+                    return true;
+                }
+                return false;
+            }
+        });
         web.setWebChromeClient(new WebChromeClient());
         if (savedInstanceState != null) web.restoreState(savedInstanceState);
         else web.loadUrl("file:///android_asset/www/index.html");

@@ -46,6 +46,24 @@ h1 span{background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-backgr
 @keyframes heart{40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .card.isfav{border-color:rgba(251,79,125,.35)}
 .panel .fav{position:absolute;right:58px;top:14px}
+/* mapa de ubicación (SVG estático) */
+.map{position:relative;width:100%;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#070b1a}
+.map svg{display:block;width:100%;height:auto}
+.map .od{fill:#22d3ee;opacity:.55}
+.map .tw{fill:#7d89c2;font-size:30px;font-weight:600;text-anchor:middle;letter-spacing:.5px;opacity:.75}
+.map .lb{fill:#fff;font-size:30px;font-weight:800;text-anchor:middle}
+.map .coords{position:absolute;left:10px;bottom:6px;font-size:10.5px;color:var(--mut)}
+.map .attr{position:absolute;right:10px;bottom:6px;font-size:9.5px;color:rgba(255,255,255,.45)}
+/* webcams */
+.cams{display:grid;gap:8px}
+.cam{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--txt);background:linear-gradient(90deg,rgba(244,114,182,.12),rgba(167,139,250,.08));border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.cam .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--pink),var(--violet));font-size:18px;flex:none}
+.cam b{display:block;font-size:14px}
+.cam small{color:var(--mut);font-size:11.5px}
+.cam .go{margin-left:auto;color:var(--pink);font-size:18px}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d6d;margin-right:6px;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.2}}
+.tag.cam-tag{color:var(--pink);background:rgba(244,114,182,.1)}
 main{padding:4px 14px calc(24px + env(safe-area-inset-bottom))}
 .status{color:var(--mut);font-size:12px;margin:4px 4px 10px;display:flex;gap:10px;flex-wrap:wrap}
 .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px 0 8px}
@@ -143,45 +161,47 @@ a{color:var(--cyan)}
 const BEACHES = [
   {n:"Las Canteras",m:"Las Palmas de GC",z:"Norte",lat:28.1403,lon:-15.4358,aemet:"3501601"},
   {n:"El Confital",m:"Las Palmas de GC",z:"Norte",lat:28.1555,lon:-15.4370},
-  {n:"Las Alcaravaneras",m:"Las Palmas de GC",z:"Este",lat:28.1310,lon:-15.4230},
-  {n:"La Laja",m:"Las Palmas de GC",z:"Este",lat:28.0670,lon:-15.4170},
+  {n:"Las Alcaravaneras",m:"Las Palmas de GC",z:"Este",lat:28.1306,lon:-15.4292},
+  {n:"La Laja",m:"Las Palmas de GC",z:"Este",lat:28.0585,lon:-15.4191},
   {n:"El Puertillo",m:"Arucas",z:"Norte",lat:28.1500,lon:-15.5356,aemet:"3500601"},
   {n:"Charco de San Lorenzo",m:"Moya",z:"Norte",lat:28.1436,lon:-15.5758,aemet:"3501301"},
   {n:"San Felipe",m:"Santa María de Guía",z:"Norte",lat:28.1458,lon:-15.5922,aemet:"3502301"},
-  {n:"El Agujero",m:"Gáldar",z:"Norte",lat:28.1520,lon:-15.6600},
+  {n:"El Agujero",m:"Gáldar",z:"Norte",lat:28.1604,lon:-15.6617},
   {n:"Sardina",m:"Gáldar",z:"Norte",lat:28.1519,lon:-15.6961,aemet:"3500901"},
   {n:"Las Nieves",m:"Agaete",z:"Oeste",lat:28.1008,lon:-15.7103,aemet:"3500101"},
-  {n:"Guayedra",m:"Agaete",z:"Oeste",lat:28.0900,lon:-15.7090},
+  {n:"Guayedra",m:"Agaete",z:"Oeste",lat:28.0873,lon:-15.7089},
   {n:"Puerto de La Aldea",m:"La Aldea de San Nicolás",z:"Oeste",lat:28.0064,lon:-15.8172,aemet:"3502001"},
   {n:"Güigüí",m:"La Aldea de San Nicolás",z:"Oeste",lat:27.9460,lon:-15.8260},
   {n:"Tasarte",m:"La Aldea de San Nicolás",z:"Oeste",lat:27.8711,lon:-15.8056,aemet:"3502002"},
-  {n:"Veneguera",m:"Mogán",z:"Oeste",lat:27.8430,lon:-15.7890},
+  {n:"Veneguera",m:"Mogán",z:"Oeste",lat:27.8465,lon:-15.7913},
   {n:"Puerto de Mogán",m:"Mogán",z:"Sur",lat:27.8160,lon:-15.7630},
   {n:"Taurito",m:"Mogán",z:"Sur",lat:27.8150,lon:-15.7533,aemet:"3501201"},
-  {n:"Playa del Cura",m:"Mogán",z:"Sur",lat:27.7990,lon:-15.7330},
-  {n:"Tauro",m:"Mogán",z:"Sur",lat:27.7950,lon:-15.7270},
+  {n:"Playa del Cura",m:"Mogán",z:"Sur",lat:27.7983,lon:-15.7326},
+  {n:"Tauro",m:"Mogán",z:"Sur",lat:27.7967,lon:-15.7284},
   {n:"Amadores",m:"Mogán",z:"Sur",lat:27.7903,lon:-15.7244,aemet:"3501202"},
-  {n:"Puerto Rico",m:"Mogán",z:"Sur",lat:27.7850,lon:-15.7110},
-  {n:"Anfi del Mar",m:"Mogán",z:"Sur",lat:27.7730,lon:-15.6950},
-  {n:"Patalavaca",m:"Mogán",z:"Sur",lat:27.7640,lon:-15.6880},
-  {n:"Arguineguín",m:"Mogán",z:"Sur",lat:27.7580,lon:-15.6800},
-  {n:"Pasito Blanco",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7440,lon:-15.6180},
-  {n:"Meloneras",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7400,lon:-15.5980},
+  {n:"Puerto Rico",m:"Mogán",z:"Sur",lat:27.7847,lon:-15.7137},
+  {n:"Anfi del Mar",m:"Mogán",z:"Sur",lat:27.7727,lon:-15.696},
+  {n:"Patalavaca",m:"Mogán",z:"Sur",lat:27.7701,lon:-15.6887},
+  {n:"Arguineguín",m:"Mogán",z:"Sur",lat:27.7565,lon:-15.681},
+  {n:"Pasito Blanco",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.749,lon:-15.6209},
+  {n:"Meloneras",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7449,lon:-15.6117},
   {n:"Maspalomas",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7378,lon:-15.5831,aemet:"3501901"},
   {n:"Playa del Inglés",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7478,lon:-15.5617,aemet:"3501902"},
   {n:"San Agustín",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7703,lon:-15.5394,aemet:"3501903"},
-  {n:"Playa del Águila",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7860,lon:-15.5130},
+  {n:"Playa del Águila",m:"San Bartolomé de Tirajana",z:"Sur",lat:27.7746,lon:-15.5308},
   {n:"Pozo Izquierdo",m:"Santa Lucía de Tirajana",z:"Este",lat:27.8225,lon:-15.4239,aemet:"3502201"},
   {n:"Arinaga",m:"Agüimes",z:"Este",lat:27.8569,lon:-15.3975,aemet:"3500201"},
-  {n:"Playa de Vargas",m:"Agüimes",z:"Este",lat:27.8800,lon:-15.3840},
+  {n:"Playa de Vargas",m:"Agüimes",z:"Este",lat:27.8903,lon:-15.3942},
   {n:"El Burrero",m:"Ingenio",z:"Este",lat:27.9111,lon:-15.3875,aemet:"3501101"},
-  {n:"Ojos de Garza",m:"Telde",z:"Este",lat:27.9490,lon:-15.3730},
-  {n:"Salinetas",m:"Telde",z:"Este",lat:27.9770,lon:-15.3740},
+  {n:"Ojos de Garza",m:"Telde",z:"Este",lat:27.9502,lon:-15.3809},
+  {n:"Salinetas",m:"Telde",z:"Este",lat:27.9811,lon:-15.378},
   {n:"Melenara",m:"Telde",z:"Este",lat:27.9875,lon:-15.3758,aemet:"3502601"},
-  {n:"Hoya del Pozo",m:"Telde",z:"Este",lat:27.9960,lon:-15.3730},
-  {n:"La Garita",m:"Telde",z:"Este",lat:28.0120,lon:-15.3710},
+  {n:"Hoya del Pozo",m:"Telde",z:"Este",lat:27.9999,lon:-15.3758},
+  {n:"La Garita",m:"Telde",z:"Este",lat:28.0067,lon:-15.3772},
 ];
-BEACHES.forEach((b,i)=>b.id=i);
+// Webcams públicas: se abren en la web de cada proveedor (no se incrustan).
+const CAMS = {"Las Canteras": [{"t": "Peña la Vieja · SkylineWebcams","u": "https://www.skylinewebcams.com/en/webcam/espana/canarias/las-palmas-gran-canaria/playa-las-canteras"},{"t": "Playa Grande · SkylineWebcams","u": "https://www.skylinewebcams.com/webcam/espana/canarias/las-palmas-gran-canaria/playa-grande-las-canteras.html"},{"t": "La Cícer · WhatsUpCams","u": "https://whatsupcams.com/en/webcams/spain/canary-islands/las-palmas-gran-canaria/la-cicer-beach-surf-beach-de-las-canteras"},{"t": "La Barra · in2theBeach","u": "https://spain-grancanaria.com/en/images-videos/webcams/canteras-beach-la-barra.html"}],"Maspalomas": [{"t": "Dunas y Playa del Inglés · in2theBeach","u": "https://en.in2thebeach.es/webcam/123/dunas-de-maspalomas-y-playa-del-ingles/"},{"t": "Dunas · WhatsUpCams","u": "https://www.whatsupcams.com/en/webcams/spain/canary-islands/maspalomas/dunes-maspalomas-webcam-gran-canaria-canary-islands/"}],"Playa del Inglés": [{"t": "Playa del Inglés y Dunas · in2theBeach","u": "https://en.in2thebeach.es/webcam/123/dunas-de-maspalomas-y-playa-del-ingles/"},{"t": "Cámaras de Maspalomas · enteraT","u": "https://www.enterat.com/servicios/webcams-playas-maspalomas.php"}],"San Agustín": [{"t": "Playa de San Agustín · in2theBeach","u": "https://spain-grancanaria.com/en/images-videos/webcams/san-agustin-beach-cam.html"}],"Amadores": [{"t": "Playa de Amadores · SkylineWebcams","u": "https://www.skylinewebcams.com/webcam/espana/canarias/las-palmas-gran-canaria/puerto-rico-de-gran-canaria-playa-amadores.html"}],"Arguineguín": [{"t": "Las Marañuelas · WhatsUpCams","u": "https://www.whatsupcams.com/en/webcams/spain/canary-islands/maspalomas/webcam-las-maranuelas-beach-arguineguin-gran-canaria"}],"Puerto Rico": [{"t": "Puerto deportivo · FuerteventuraPlayas","u": "https://www.fuerteventuraplayas.com/en/?p=16717"}]};
+BEACHES.forEach((b,i)=>{ b.id=i; b.cams = CAMS[b.n]||[]; });
 
 // En el APK (file://) se va directo a AEMET; en la web se pasa por el puente /aemet del servidor (AEMET no permite CORS).
 const AEMET = location.protocol==="file:" ? "https://www.aemet.es" : (window.AEMET_BASE || "/aemet");
@@ -440,6 +460,7 @@ function card(b,idx){
       ${c?.wind_gusts_10m!=null?`<span class="tag">Rachas <b>${fmt(c.wind_gusts_10m,0)}</b> km/h</span>`:""}
       ${c?.uv_index!=null?`<span class="tag">UV <b>${fmt(c.uv_index,0)}</b></span>`:""}
       ${c?.temperature_2m!=null?`<span class="tag">Aire <b>${fmt(c.temperature_2m,0)}°</b></span>`:""}
+      ${b.cams.length?`<span class="tag cam-tag">📹 Webcam</span>`:""}
       ${ae?`<span class="tag src">AEMET: oleaje <b>${ae.oleaje[pm]||ae.oleaje[0]}</b> · viento <b>${ae.viento[pm]||ae.viento[0]}</b></span>`:""}
     </div>
   </div>`;
@@ -471,6 +492,35 @@ function windBars(wx){
      <b>${Math.round(v)}</b><span>${h.time[i+k].slice(11,13)}h</span></div>`).join("")}</div>
      <div style="display:flex;gap:4px">${dir.map(d=>`<div style="flex:1;text-align:center;font-size:12px;color:var(--cyan)"><span class="arrow" style="transform:rotate(${d+180}deg)">⬆</span></div>`).join("")}</div>`;
 }
+// ───── Mapa estático de Gran Canaria (silueta de OpenStreetMap, sin conexión ni librerías) ─────
+const ISLAND_PATH = "M65 503L78 552L68 630L96 665L153 787L190 826L215 829L243 863L258 864L268 884L292 893L290 895L294 902L292 897L297 896L314 921L334 920L348 944L341 951L362 966L372 969L365 965L370 955L391 951L447 975L464 967L502 997L555 990L568 942L622 922L654 898L670 900L708 875L810 860L829 838L829 796L841 767L862 758L875 766L871 772L877 764L864 757L873 742L898 739L895 712L906 701L889 692L882 671L899 633L899 595L919 575L941 591L948 585L927 566L929 556L908 550L913 537L904 529L911 519L899 509L905 491L916 488L912 475L931 462L926 447L916 446L913 427L920 421L898 406L894 379L843 346L846 328L834 315L850 229L826 172L825 182L819 174L818 170L828 172L817 169L818 162L824 162L825 159L819 145L833 154L820 141L819 133L826 141L831 133L831 143L838 134L838 172L848 172L842 148L849 138L841 131L858 109L856 153L862 194L858 127L864 102L873 103L874 126L874 102L861 92L858 67L843 68L833 60L793 93L812 123L812 134L802 150L772 172L746 176L693 136L657 135L635 115L600 134L504 138L477 132L448 89L431 80L421 90L400 92L377 109L350 100L346 83L318 98L298 93L299 105L322 123L307 142L316 162L298 186L306 193L304 213L290 229L301 243L295 266L277 293L251 306L243 328L193 344L189 364L166 388L132 406L87 412L98 430L65 503Z";
+const MAP = {lat0:27.71, lat1:28.21, lon0:-15.87, lon1:-15.33, W:1000, H:1048};
+const mercY = lat => { const r = lat*Math.PI/180; return Math.log(Math.tan(r) + 1/Math.cos(r))*180/Math.PI; };
+function mapXY(lat, lon){
+  const y0 = mercY(MAP.lat0), y1 = mercY(MAP.lat1);
+  return [ (lon-MAP.lon0)/(MAP.lon1-MAP.lon0)*MAP.W, (y1-mercY(lat))/(y1-y0)*MAP.H ];
+}
+const TOWNS = [["Las Palmas",28.075,-15.475],["Telde",27.99,-15.43],["Maspalomas",27.79,-15.585],["Mogán",27.885,-15.72],["Agaete",28.08,-15.665],["Gáldar",28.125,-15.64],["Tejeda",27.995,-15.615]];
+function mapHtml(b){
+  const [x, y] = mapXY(b.lat, b.lon);
+  const others = BEACHES.filter(o=>o.id!==b.id && DATA[o.id]?.has).map(o=>{ const [ox,oy]=mapXY(o.lat,o.lon); return `<circle cx="${ox.toFixed(0)}" cy="${oy.toFixed(0)}" r="9" class="od"><title>${o.n}</title></circle>`; }).join("");
+  const towns = TOWNS.map(([n,la,lo])=>{ const [tx,ty]=mapXY(la,lo); return `<text x="${tx.toFixed(0)}" y="${ty.toFixed(0)}" class="tw">${n}</text>`; }).join("");
+  const lblW = Math.max(150, b.n.length*21+40), lx = Math.min(Math.max(x - lblW/2, 8), MAP.W - lblW - 8), ly = y < 140 ? y + 38 : y - 92;
+  return `<div class="map"><svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Mapa: ${b.n}">
+    <defs>
+      <radialGradient id="sea" cx="50%" cy="50%" r="70%"><stop offset="0" stop-color="#0f1a44"/><stop offset="1" stop-color="#070b1a"/></radialGradient>
+      <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f2b63"/><stop offset="1" stop-color="#2a1f55"/></linearGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="9"/></filter>
+    </defs>
+    <rect width="${MAP.W}" height="${MAP.H}" fill="url(#sea)"/>
+    <path d="${ISLAND_PATH}" fill="none" stroke="#22d3ee" stroke-width="16" opacity=".25" filter="url(#glow)"/>
+    <path d="${ISLAND_PATH}" fill="url(#land)" stroke="#5eead4" stroke-width="3" stroke-linejoin="round"/>
+    ${towns}${others}
+    <circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="20" fill="#f472b6"><animate attributeName="r" values="18;60;18" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".6;0;.6" dur="1.8s" repeatCount="indefinite"/></circle>
+    <circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="17" fill="#f472b6" stroke="#fff" stroke-width="6"/>
+    <g transform="translate(${lx.toFixed(0)},${ly.toFixed(0)})"><rect width="${lblW}" height="52" rx="14" fill="#0a0e23" stroke="#f472b6" stroke-width="3"/><text x="${lblW/2}" y="35" class="lb">${b.n}</text></g>
+  </svg><span class="coords">${b.lat.toFixed(4)}, ${b.lon.toFixed(4)}</span><span class="attr">Silueta © OpenStreetMap</span></div>`;
+}
 function lvlSpan(w){ const l=lvlWord(w); return `<span class="${l!=null?"lvl"+l:""}">${w||"–"}</span>`; }
 function open(id){
   const b=BEACHES[id], d=DATA[id], c=d.wx?.current, m=d.marine?.current, lv=d.lv!=null?LV[d.lv]:null;
@@ -483,6 +533,12 @@ function open(id){
       <div class="m water"><div class="ic">🌡️</div><div class="v" style="color:${waterColor(m?.sea_surface_temperature)}">${fmt(m?.sea_surface_temperature)}°</div><div class="l">agua</div></div>
       <div class="m tide"><div class="ic">📏</div><div class="v">${d.tide?(d.tide.now>0?"+":"")+fmt(d.tide.now,2):"–"}</div><div class="l">m nivel mar</div></div>
     </div>`;
+  h+=`<div class="sec"><h3>Ubicación</h3>${mapHtml(b)}</div>`;
+  if(b.cams.length){
+    h+=`<div class="sec"><h3><span class="live"></span>Webcams en directo</h3><div class="cams">${
+      b.cams.map(c=>{ const [t,src]=c.t.split(" · "); return `<a class="cam" href="${c.u}" target="_blank" rel="noopener"><span class="ic">📹</span><span><b>${t}</b><small>${src||""} · se abre en su web</small></span><span class="go">↗</span></a>`; }).join("")
+    }</div></div>`;
+  }
   if(d.mareas){
     h+=`<div class="sec"><h3>Mareas oficiales · IHM vía AEMET</h3><div class="box"><div class="tides">${
       d.mareas.map(x=>[...x.pleamar.map(t=>({t,hi:1})),...x.bajamar.map(t=>({t,hi:0}))]
